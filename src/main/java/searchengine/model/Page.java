@@ -1,8 +1,6 @@
 package searchengine.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 
 import javax.persistence.*;
@@ -28,7 +26,7 @@ public class Page{
     private String path;
 
     @Column(name = "code")
-    private int cade;
+    private int code;
 
     @Column(name = "content", columnDefinition = "MEDIUMTEXT")
     private String content;
