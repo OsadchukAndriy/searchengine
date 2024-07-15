@@ -1,35 +1,48 @@
 package searchengine.model;
 
+import jakarta.persistence.*;
 import lombok.*;
 
 
-import javax.persistence.*;
+import java.util.List;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+
 @Entity
-@Table(name = "Page")
+@Getter
+@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Page{
 
     @Id
-    @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "site_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "site_id")
     private Site site;
 
-    @Column(name = "path", columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
+    @EqualsAndHashCode.Include
     private String path;
 
-    @Column(name = "code")
+    @Column
     private int code;
 
-    @Column(name = "content", columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String content;
 
+    @OneToMany(mappedBy = "page",  targetEntity = Index.class)
+    private List<Page> indexes;
+
+    @Override
+    public String toString() {
+        return "Page{" +
+                "id=" + id +
+                ", site_id=" + site.getId() +
+                ", path='" + path + '\'' +
+                ", code=" + code +
+                '}';
+    }
 
 }

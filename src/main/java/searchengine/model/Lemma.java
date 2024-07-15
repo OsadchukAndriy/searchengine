@@ -1,17 +1,18 @@
 package searchengine.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Getter
+@Setter
 @Entity
-@Table(name = "Lemma")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Lemma {
 
     @Id
@@ -23,14 +24,24 @@ public class Lemma {
     private Site site;
 
     @Column(length = 255)
+    @EqualsAndHashCode.Include
     private String lemma;
 
-    @Column(name = "frequency")
+    @Column
     private int frequency;
 
     @OneToMany(mappedBy = "lemma", targetEntity = Index.class)
     private List<Page> indexes;
 
+    @Override
+    public String toString() {
+        return "Lemma{" +
+                "id=" + id +
+                ", site_id=" + site.getId() +
+                ", lemma='" + lemma + '\'' +
+                ", frequency=" + frequency +
+                '}';
+    }
 
     public void IncreaseFrequency(){
         frequency++;

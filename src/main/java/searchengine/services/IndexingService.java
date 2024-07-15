@@ -1,6 +1,6 @@
 package searchengine.services;
 
-import searchengine.dto.CustomResponse;
+import searchengine.dto.statistics.CustomResponse;
 
 public interface IndexingService {
 
