@@ -2,21 +2,15 @@ package searchengine.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-
-
 import java.util.List;
 
-
+@Data
 @Entity
-@Getter
-@Setter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Page{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
 
     @ManyToOne
     @JoinColumn(name = "site_id")
@@ -44,5 +38,4 @@ public class Page{
                 ", code=" + code +
                 '}';
     }
-
 }
