@@ -6,7 +6,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Data
-@Entity(name = "`Index`")
+@Entity(name = "`index`")
 public class Index {
 
     @Id
