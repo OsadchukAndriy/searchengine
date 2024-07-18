@@ -1,4 +1,4 @@
-package searchengine.services;
+package searchengine.services.implement;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
@@ -12,11 +12,12 @@ import searchengine.dto.statistics.SearchingResponse;
 import searchengine.model.Index;
 import searchengine.model.Lemma;
 import searchengine.model.Site;
-import searchengine.processors.LemmaFinder;
+import searchengine.services.Lemma.LemmaFinder;
 import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
+import searchengine.services.interfaces.SearchingService;
 
 import java.io.IOException;
 import java.util.*;
@@ -29,13 +30,9 @@ import java.util.regex.Pattern;
 public class SearchingServiceImpl implements SearchingService {
     Logger logger = Logger.getLogger(IndexingServiceImpl.class.getName());
 
-    @Autowired
     private final SiteRepository siteRepository;
-    @Autowired
     private final PageRepository pageRepository;
-    @Autowired
     private final LemmaRepository lemmaRepository;
-    @Autowired
     private final IndexRepository indexRepository;
     private final SitesList sites;
     private Set<String> queryLemmas;

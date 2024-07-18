@@ -1,4 +1,4 @@
-package searchengine.services;
+package searchengine.services.implement;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -7,11 +7,12 @@ import searchengine.dto.statistics.CustomResponse;
 import searchengine.dto.statistics.Error;
 import searchengine.model.Site;
 import searchengine.model.SiteStatus;
-import searchengine.processors.SiteIndexator;
+import searchengine.services.Indexing.SiteIndexer;
 import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
+import searchengine.services.interfaces.IndexingService;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -42,13 +43,13 @@ public class IndexingServiceImpl implements IndexingService {
         return pool;
     }
 
-    private SiteIndexator InitSiteIndexator(String name, String url) {
+    private SiteIndexer InitSiteIndexator(String name, String url) {
         Site site = new Site();
         site.setName(name);
         site.setUrl(url);
         site.setStatus(SiteStatus.INDEXING);
         site.setLastError("");
-        SiteIndexator siteIndexator = new SiteIndexator();
+        SiteIndexer siteIndexator = new SiteIndexer();
         siteIndexator.setSiteRepository(siteRepository);
         siteIndexator.setPageRepository(pageRepository);
         siteIndexator.setLemmaRepository(lemmaRepository);

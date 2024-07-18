@@ -4,27 +4,28 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
 
-@Data
 @Entity
-public class Page{
-
+@Getter
+@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class Page {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @ManyToOne
-    @JoinColumn(name = "site_id")
+    @JoinColumn(name="site_id")
     private Site site;
 
     @Column(columnDefinition = "TEXT")
     @EqualsAndHashCode.Include
-    private String path;
+    String path;
 
     @Column
-    private int code;
+    int code;
 
     @Column(columnDefinition = "MEDIUMTEXT")
-    private String content;
+    String content;
 
     @OneToMany(mappedBy = "page",  targetEntity = Index.class)
     private List<Page> indexes;

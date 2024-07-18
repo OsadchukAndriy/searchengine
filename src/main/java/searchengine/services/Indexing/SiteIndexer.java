@@ -1,4 +1,4 @@
-package searchengine.processors;
+package searchengine.services.Indexing;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +15,7 @@ import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
+import searchengine.services.Lemma.LemmaFinder;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -26,7 +27,7 @@ import java.util.concurrent.RecursiveAction;
 import java.util.logging.Logger;
 
 
-public class SiteIndexator extends RecursiveAction {
+public class SiteIndexer extends RecursiveAction {
 
     @Getter
     @Setter
@@ -66,7 +67,7 @@ public class SiteIndexator extends RecursiveAction {
 
     private boolean isInterrupted = false;
 
-    private Logger logger = Logger.getLogger(SiteIndexator.class.getName());
+    private Logger logger = Logger.getLogger(SiteIndexer.class.getName());
 
     private void saveSite() {
         site.setStatusTime(LocalDateTime.now());
@@ -154,7 +155,7 @@ public class SiteIndexator extends RecursiveAction {
     }
 
     private void processPage(String url) throws InterruptedException {
-        List<SiteIndexator> pageIndexators = new ArrayList<SiteIndexator>(); // список дочерних процессов
+        List<SiteIndexer> pageIndexer = new ArrayList<SiteIndexer>(); // список дочерних процессов
         Document htmlDoc = getHtml(url);
         if (htmlDoc == null) {
             return;
@@ -167,21 +168,21 @@ public class SiteIndexator extends RecursiveAction {
                 .filter(l -> !htmlDoc.baseUri().equals(l))
                 .distinct()
                 .forEach(l -> {
-                    SiteIndexator indexator = new SiteIndexator();
+                    SiteIndexer indexer = new SiteIndexer();
                     setSiteRepository(siteRepository);
                     setPageRepository(pageRepository);
                     setLemmaRepository(lemmaRepository);
                     setIndexRepository(indexRepository);
-                    indexator.setSite(site);
-                    indexator.setPageUrl(l);
-                    indexator.setPages(pages);
-                    indexator.setLemmas(lemmas);
-                    indexator.setIndexes(indexes);
-                    pageIndexators.add(indexator);
-                    indexator.fork();
+                    indexer.setSite(site);
+                    indexer.setPageUrl(l);
+                    indexer.setPages(pages);
+                    indexer.setLemmas(lemmas);
+                    indexer.setIndexes(indexes);
+                    pageIndexer.add(indexer);
+                    indexer.fork();
                 });
-        logger.info(url + " - потоков запущено " + (long) pageIndexators.size());
-        pageIndexators.forEach(SiteIndexator::join);
+        logger.info(url + " - потоков запущено " + (long) pageIndexer.size());
+        pageIndexer.forEach(SiteIndexer::join);
     }
 
 
@@ -196,7 +197,6 @@ public class SiteIndexator extends RecursiveAction {
                     site.setLastError("");
                     saveSite();
                     logger.info(site.getUrl() + " - удаление данных");
-                    indexRepository.deleteIndexesBySiteId(site.getId());
                     pageRepository.deletePagesBySiteId(site.getId());
                     lemmaRepository.deleteLemmasBySiteId(site.getId());
                 }else {
