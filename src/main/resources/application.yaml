@@ -13,6 +13,7 @@ spring:
       ddl-auto: update
     show-sql: false
 
+
 #  spring:
 #   jpa:
 #    open-in-view: false
