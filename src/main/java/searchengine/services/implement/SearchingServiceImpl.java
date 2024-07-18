@@ -2,7 +2,6 @@ package searchengine.services.implement;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.SitesList;
 import searchengine.dto.statistics.CustomResponse;
@@ -15,7 +14,6 @@ import searchengine.model.Site;
 import searchengine.services.Lemma.LemmaFinder;
 import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
-import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
 import searchengine.services.interfaces.SearchingService;
 
@@ -31,17 +29,14 @@ public class SearchingServiceImpl implements SearchingService {
     Logger logger = Logger.getLogger(IndexingServiceImpl.class.getName());
 
     private final SiteRepository siteRepository;
-    private final PageRepository pageRepository;
     private final LemmaRepository lemmaRepository;
     private final IndexRepository indexRepository;
     private final SitesList sites;
     private Set<String> queryLemmas;
     LemmaFinder lemmaFinder;
-    private final int MAX_SNIPPED_LEN = 160;
 
-    public SearchingServiceImpl(SiteRepository siteRepository, PageRepository pageRepository, LemmaRepository lemmaRepository, IndexRepository indexRepository, SitesList sites) {
+    public SearchingServiceImpl(SiteRepository siteRepository, LemmaRepository lemmaRepository, IndexRepository indexRepository, SitesList sites) {
         this.siteRepository = siteRepository;
-        this.pageRepository = pageRepository;
         this.lemmaRepository = lemmaRepository;
         this.indexRepository = indexRepository;
         this.sites = sites;
@@ -56,8 +51,8 @@ public class SearchingServiceImpl implements SearchingService {
         String pageText = Jsoup.parse(htmlText).text();
         String cleanText = Jsoup.clean(pageText, Safelist.none());
 
-        int maxContextWords = 10; // Слів контексту навколо збігу
-        String searchRegex = String.join("|", queryLemmas); // Збіг з будь-якою лемою запиту
+        int maxContextWords = 10;
+        String searchRegex = String.join("|", queryLemmas);
         Matcher matcher = Pattern.compile(searchRegex).matcher(cleanText);
 
         if (matcher.find()) {
@@ -66,7 +61,7 @@ public class SearchingServiceImpl implements SearchingService {
             String snippet = cleanText.substring(start, end);
             return Jsoup.clean(snippet.replaceAll(searchRegex, "<b>$0</b>"), Safelist.basic());
         }
-        return ""; // Збігів не знайдено
+        return "";
     }
 
 
@@ -78,7 +73,7 @@ public class SearchingServiceImpl implements SearchingService {
             List<Index> pageIndexList = indexRepository.findIndexByLemma(lemma);
             logger.info("Найдено " + pageIndexList.size() + " страниц с леммой "
                     + lemma.getLemma() + " "
-                    + pageIndexList.stream().map(pi -> pi.getPage().getPath()).reduce((x, y) -> x + ", " + y).get());
+                    + pageIndexList.stream().map(pi -> pi.getPage().getPath()).reduce((x, y) -> x + ", " + y).isPresent());
             if (isFirstLemma) {
                 isFirstLemma = false;
                 searchingDataList.addAll(pageIndexList.stream().map(pi -> {
@@ -92,7 +87,6 @@ public class SearchingServiceImpl implements SearchingService {
                     return searchingData;
                 }).toList());
             } else {
-                // список страниц со следующей леммой
                 Iterator<SearchingData> searchingDataIterator = searchingDataList.iterator();
                 while (searchingDataIterator.hasNext()) {
                     SearchingData searchingData = searchingDataIterator.next();
@@ -114,7 +108,7 @@ public class SearchingServiceImpl implements SearchingService {
 
     private CustomResponse makeResponse(List<SearchingData> searchingDataList) {
 
-        if (searchingDataList.size() == 0) {
+        if (searchingDataList.isEmpty()) {
             return new Error("По вашему запросу нет результатов");
         }
         double maxRelevance = searchingDataList.stream()
@@ -136,12 +130,12 @@ public class SearchingServiceImpl implements SearchingService {
     @Override
     public CustomResponse search(String query, String url, int offset, int limit) {
         logger.info("Запрос: " + query + " сайт: " + url + " сдвиг: " + offset + " лимит: " + limit);
-        if (query.equals("")) {
+        if (query.isEmpty()) {
             return new Error("Задан пустой поисковый запрос");
         }
 
         queryLemmas = lemmaFinder.getLemmaSet(query);
-        if (queryLemmas.size() == 0) {
+        if (queryLemmas.isEmpty()) {
             return new Error("По вашему запросу нет результатов");
         }
 
@@ -149,13 +143,10 @@ public class SearchingServiceImpl implements SearchingService {
         sites.getSites().stream().filter(s -> url == null || s.getUrl().equals(url)).forEach(s -> {
             Site site = siteRepository.findFirstSiteByUrl(s.getUrl());
             logger.info(site.getName() + " " + site.getUrl());
-            List<Lemma> lemmas = new ArrayList<>();
-            queryLemmas.forEach(l -> {
-                lemmas.addAll(lemmaRepository.findLemmaByLemmaAndSite(l, site));
-            });
-            lemmas.forEach(l -> {
-                logger.info(l.getLemma() + " " + l.getSite().getUrl() + " частота: " + l.getFrequency());
-            });
+            List<Lemma> lemmas = new ArrayList<>(queryLemmas.stream()
+                    .flatMap(l -> lemmaRepository.findLemmaByLemmaAndSite(l, site).stream())
+                    .toList());
+            lemmas.forEach(l -> logger.info(String.format("%s %s частота: %d", l.getLemma(), l.getSite().getUrl(), l.getFrequency())));
             searchingDataList.addAll(lemmaProcessing(lemmas));
         });
 
