@@ -11,7 +11,7 @@ import searchengine.dto.statistics.SearchingResponse;
 import searchengine.model.Index;
 import searchengine.model.Lemma;
 import searchengine.model.Site;
-import searchengine.services.Lemma.LemmaFinder;
+import searchengine.utils.Lemma.LemmaFinder;
 import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.SiteRepository;
@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -67,43 +68,54 @@ public class SearchingServiceImpl implements SearchingService {
 
     private List<SearchingData> lemmaProcessing(List<Lemma> lemmas) {
         List<SearchingData> searchingDataList = new ArrayList<>();
-        boolean isFirstLemma = true;
         lemmas.sort(Comparator.comparingInt(Lemma::getFrequency));
+        boolean isFirstLemma = true;
+
         for (Lemma lemma : lemmas) {
             List<Index> pageIndexList = indexRepository.findIndexByLemma(lemma);
             logger.info("Найдено " + pageIndexList.size() + " страниц с леммой "
                     + lemma.getLemma() + " "
                     + pageIndexList.stream().map(pi -> pi.getPage().getPath()).reduce((x, y) -> x + ", " + y).isPresent());
+
             if (isFirstLemma) {
                 isFirstLemma = false;
-                searchingDataList.addAll(pageIndexList.stream().map(pi -> {
-                    SearchingData searchingData = new SearchingData();
-                    searchingData.setSite(lemma.getSite().getUrl());
-                    searchingData.setSiteName(lemma.getSite().getName());
-                    searchingData.setTitle(Jsoup.parse(pi.getPage().getContent()).title());
-                    searchingData.setSnippet(pi.getPage().getContent());
-                    searchingData.setUri(pi.getPage().getPath());
-                    searchingData.setRelevance(pi.getRank());
-                    return searchingData;
-                }).toList());
+                searchingDataList.addAll(createInitialSearchingDataList(pageIndexList, lemma));
             } else {
-                Iterator<SearchingData> searchingDataIterator = searchingDataList.iterator();
-                while (searchingDataIterator.hasNext()) {
-                    SearchingData searchingData = searchingDataIterator.next();
-                    boolean isExists = false;
-                    for (Index pageIndex : pageIndexList) {
-                        if (searchingData.getUri().equals(pageIndex.getPage().getPath())) {
-                            searchingData.setRelevance(searchingData.getRelevance() + pageIndex.getRank());
-                            isExists = true;
-                            break;
-                        }
-                    }
-                    if (!isExists)
-                        searchingDataIterator.remove();
-                }
+                updateSearchingDataList(searchingDataList, pageIndexList);
             }
         }
         return searchingDataList;
+    }
+
+    private List<SearchingData> createInitialSearchingDataList(List<Index> pageIndexList, Lemma lemma) {
+        return pageIndexList.stream().map(pi -> {
+            SearchingData searchingData = new SearchingData();
+            searchingData.setSite(lemma.getSite().getUrl());
+            searchingData.setSiteName(lemma.getSite().getName());
+            searchingData.setTitle(Jsoup.parse(pi.getPage().getContent()).title());
+            searchingData.setSnippet(pi.getPage().getContent());
+            searchingData.setUri(pi.getPage().getPath());
+            searchingData.setRelevance(pi.getRank());
+            return searchingData;
+        }).collect(Collectors.toList());
+    }
+
+    private void updateSearchingDataList(List<SearchingData> searchingDataList, List<Index> pageIndexList) {
+        Iterator<SearchingData> searchingDataIterator = searchingDataList.iterator();
+        while (searchingDataIterator.hasNext()) {
+            SearchingData searchingData = searchingDataIterator.next();
+            boolean isExists = false;
+            for (Index pageIndex : pageIndexList) {
+                if (searchingData.getUri().equals(pageIndex.getPage().getPath())) {
+                    searchingData.setRelevance(searchingData.getRelevance() + pageIndex.getRank());
+                    isExists = true;
+                    break;
+                }
+            }
+            if (!isExists) {
+                searchingDataIterator.remove();
+            }
+        }
     }
 
     private CustomResponse makeResponse(List<SearchingData> searchingDataList, int offset, int limit) {

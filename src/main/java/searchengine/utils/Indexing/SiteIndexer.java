@@ -1,4 +1,4 @@
-package searchengine.services.Indexing;
+package searchengine.utils.Indexing;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +15,7 @@ import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
 import searchengine.repository.SiteRepository;
-import searchengine.services.Lemma.LemmaFinder;
+import searchengine.utils.Lemma.LemmaFinder;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;

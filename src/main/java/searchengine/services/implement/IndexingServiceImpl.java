@@ -7,7 +7,7 @@ import searchengine.dto.statistics.CustomResponse;
 import searchengine.dto.statistics.Error;
 import searchengine.model.Site;
 import searchengine.model.SiteStatus;
-import searchengine.services.Indexing.SiteIndexer;
+import searchengine.utils.Indexing.SiteIndexer;
 import searchengine.repository.IndexRepository;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
