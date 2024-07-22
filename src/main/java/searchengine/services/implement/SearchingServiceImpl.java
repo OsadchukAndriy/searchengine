@@ -106,13 +106,13 @@ public class SearchingServiceImpl implements SearchingService {
         return searchingDataList;
     }
 
-    private CustomResponse makeResponse(List<SearchingData> searchingDataList) {
-
+    private CustomResponse makeResponse(List<SearchingData> searchingDataList, int offset, int limit) {
         if (searchingDataList.isEmpty()) {
             return new Error("По вашему запросу нет результатов");
         }
+
         double maxRelevance = searchingDataList.stream()
-                .map(SearchingData::getRelevance).max(Double::compare).get();
+                .map(SearchingData::getRelevance).max(Double::compare).orElse(0.0);
 
         searchingDataList.forEach(sd -> {
             sd.setSnippet(MakeSnipped(sd.getSnippet()));
@@ -120,13 +120,18 @@ public class SearchingServiceImpl implements SearchingService {
             logger.info(sd.getSite() + " " + sd.getUri() + " релевантность: " + sd.getRelevance());
         });
         searchingDataList.sort(Comparator.comparingDouble(SearchingData::getRelevance).reversed());
+
+        // Пагінація результатів
+        int totalResults = searchingDataList.size();
+        int endIndex = Math.min(totalResults, offset + limit);
+        List<SearchingData> paginatedResults = searchingDataList.subList(offset, endIndex);
+
         SearchingResponse searchingResponse = new SearchingResponse();
         searchingResponse.setResult(true);
-        searchingResponse.setData(searchingDataList);
-        searchingResponse.setCount(searchingDataList.size());
+        searchingResponse.setData(paginatedResults);
+        searchingResponse.setCount(totalResults); // Загальна кількість результатів, а не тільки поточні
         return searchingResponse;
     }
-
     @Override
     public CustomResponse search(String query, String url, int offset, int limit) {
         logger.info("Запрос: " + query + " сайт: " + url + " сдвиг: " + offset + " лимит: " + limit);
@@ -150,6 +155,6 @@ public class SearchingServiceImpl implements SearchingService {
             searchingDataList.addAll(lemmaProcessing(lemmas));
         });
 
-        return makeResponse(searchingDataList);
+        return makeResponse(searchingDataList, offset, limit);
     }
 }
