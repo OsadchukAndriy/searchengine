@@ -36,6 +36,8 @@ public class SearchingServiceImpl implements SearchingService {
     private Set<String> queryLemmas;
     LemmaFinder lemmaFinder;
 
+    private final int MAX_SNIPPED_LEN = 30;
+
     public SearchingServiceImpl(SiteRepository siteRepository, LemmaRepository lemmaRepository, IndexRepository indexRepository, SitesList sites) {
         this.siteRepository = siteRepository;
         this.lemmaRepository = lemmaRepository;
@@ -50,19 +52,35 @@ public class SearchingServiceImpl implements SearchingService {
 
     private String MakeSnipped(String htmlText) {
         String pageText = Jsoup.parse(htmlText).text();
-        String cleanText = Jsoup.clean(pageText, Safelist.none());
+        pageText = Jsoup.clean(pageText, Safelist.none());
+        String result = "";
 
-        int maxContextWords = 10;
-        String searchRegex = String.join("|", queryLemmas);
-        Matcher matcher = Pattern.compile(searchRegex).matcher(cleanText);
-
-        if (matcher.find()) {
-            int start = Math.max(0, matcher.start() - maxContextWords);
-            int end = Math.min(cleanText.length(), matcher.end() + maxContextWords);
-            String snippet = cleanText.substring(start, end);
-            return Jsoup.clean(snippet.replaceAll(searchRegex, "<b>$0</b>"), Safelist.basic());
+        String REGEX = "[а-яА-Я]+";
+        Pattern pattern = Pattern.compile(REGEX);
+        Matcher matcher = pattern.matcher(pageText);
+        int curIndex = 0;
+        boolean first = true;
+        while (matcher.find()) {
+            String word = matcher.group();
+            String lemma = lemmaFinder.getLemmaSet(word).stream().reduce("", String::concat);
+            if (result.concat(word).length() > MAX_SNIPPED_LEN) {
+                break;
+            }
+            if (queryLemmas.stream().anyMatch(q -> q.equals(lemma))) {
+                if (first) {
+                    first = false;
+                    curIndex = matcher.start();
+                }
+                result = result.concat(pageText.substring(curIndex, matcher.start()))
+                        .concat("<b>").concat(word).concat("</b>");
+            } else {
+                if (!first) {
+                    result = result.concat(pageText.substring(curIndex, matcher.end()));
+                }
+            }
+            curIndex = matcher.end();
         }
-        return "";
+        return result;
     }
 
 
