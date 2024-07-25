@@ -155,24 +155,27 @@ public class SiteIndexer extends RecursiveAction {
     }
 
     private void processPage(String url) throws InterruptedException {
-        List<SiteIndexer> pageIndexer = new ArrayList<SiteIndexer>(); // список дочерних процессов
+        List<SiteIndexer> pageIndexer = new ArrayList<>();
         Document htmlDoc = getHtml(url);
         if (htmlDoc == null) {
             return;
         }
         lemmatization(htmlDoc.toString());
-        Elements links = htmlDoc.select("a[abs:href~=^" + htmlDoc.location() + "((?!(#|\\?)).)*$]");
+
+        Elements links = htmlDoc.select("a[href]");
+
         logger.info(url + " - найдено ссылок: " + links.size());
 
         links.stream().map(l -> l.absUrl("href"))
-                .filter(l -> !htmlDoc.baseUri().equals(l))
+                .filter(l -> l.startsWith(site.getUrl()) && !l.equals(url))
+                .filter(l -> !l.contains("#") && !l.contains("?") && !l.contains("&"))
                 .distinct()
                 .forEach(l -> {
                     SiteIndexer indexer = new SiteIndexer();
-                    setSiteRepository(siteRepository);
-                    setPageRepository(pageRepository);
-                    setLemmaRepository(lemmaRepository);
-                    setIndexRepository(indexRepository);
+                    indexer.setSiteRepository(siteRepository);
+                    indexer.setPageRepository(pageRepository);
+                    indexer.setLemmaRepository(lemmaRepository);
+                    indexer.setIndexRepository(indexRepository);
                     indexer.setSite(site);
                     indexer.setPageUrl(l);
                     indexer.setPages(pages);
@@ -185,7 +188,7 @@ public class SiteIndexer extends RecursiveAction {
         pageIndexer.forEach(SiteIndexer::join);
     }
 
-
+    @Override
     protected void compute() {
         try {
             if (pageUrl == null) {
@@ -199,19 +202,19 @@ public class SiteIndexer extends RecursiveAction {
                     logger.info(site.getUrl() + " - удаление данных");
                     pageRepository.deletePagesBySiteId(site.getId());
                     lemmaRepository.deleteLemmasBySiteId(site.getId());
-                }else {
+                } else {
                     saveSite();
                 }
-                logger.info(site.getUrl() + " - обработка " +site.getStatus());
+                logger.info(site.getUrl() + " - обработка " + site.getStatus());
                 processPage(site.getUrl());
-                pageRepository.saveAll(pages.stream().toList());
+                pageRepository.saveAll(pages);
                 lemmaRepository.saveAll(lemmas.values());
-                indexRepository.saveAll(indexes.stream().toList());
-                if (site.getStatus()==SiteStatus.INDEXING){
+                indexRepository.saveAll(indexes);
+                if (site.getStatus() == SiteStatus.INDEXING) {
                     site.setStatus(SiteStatus.INDEXED);
                 }
                 saveSite();
-                logger.info(site.getUrl() + " - завершение обработки " +site.getStatus());
+                logger.info(site.getUrl() + " - завершение обработки " + site.getStatus());
             } else {
                 //logger.info(pageUrl+ " - пропуск");
                 processPage(pageUrl);
@@ -224,4 +227,3 @@ public class SiteIndexer extends RecursiveAction {
         }
     }
 }
-
