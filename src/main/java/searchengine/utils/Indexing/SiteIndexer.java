@@ -132,7 +132,7 @@ public class SiteIndexer extends RecursiveAction {
                 synchronized (lemmas) {
                     if (lemmas.containsKey(l)) {
                         lemma = lemmas.get(l);
-                        lemma.IncreaseFrequency();
+                        lemma.increaseFrequency();
                     } else {
                         lemma = new Lemma();
                         lemma.setSite(site);

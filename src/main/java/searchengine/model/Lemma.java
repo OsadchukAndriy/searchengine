@@ -37,7 +37,7 @@ public class Lemma {
                 '}';
     }
 
-    public void IncreaseFrequency(){
+    public void increaseFrequency(){
         frequency++;
     }
 
