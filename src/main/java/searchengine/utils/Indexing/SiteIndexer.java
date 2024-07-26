@@ -65,8 +65,6 @@ public class SiteIndexer extends RecursiveAction {
     @Setter
     private IndexRepository indexRepository;
 
-    private boolean isInterrupted = false;
-
     private Logger logger = Logger.getLogger(SiteIndexer.class.getName());
 
     private void saveSite() {

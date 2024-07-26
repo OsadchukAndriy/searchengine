@@ -151,7 +151,7 @@ public class SearchingServiceImpl implements SearchingService {
         });
         searchingDataList.sort(Comparator.comparingDouble(SearchingData::getRelevance).reversed());
 
-        // Пагінація результатів
+        //pagination
         int totalResults = searchingDataList.size();
         int endIndex = Math.min(totalResults, offset + limit);
         List<SearchingData> paginatedResults = searchingDataList.subList(offset, endIndex);
@@ -159,7 +159,7 @@ public class SearchingServiceImpl implements SearchingService {
         SearchingResponse searchingResponse = new SearchingResponse();
         searchingResponse.setResult(true);
         searchingResponse.setData(paginatedResults);
-        searchingResponse.setCount(totalResults); // Загальна кількість результатів, а не тільки поточні
+        searchingResponse.setCount(totalResults);
         return searchingResponse;
     }
     @Override

@@ -14,9 +14,5 @@ import java.util.List;
 @Repository
 @Transactional
 public interface IndexRepository extends JpaRepository<Index, Integer> {
-//    @Modifying
-//    @Query(value = "delete i from `index` i inner join lemma l on i.lemma_id = l.id where l.site_id=:siteId", nativeQuery = true)
-//    void deleteIndexesBySiteId(@Param("siteId") Integer siteId);
-
     List<Index> findIndexByLemma(Lemma lemma);
 }
