@@ -26,7 +26,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.RecursiveAction;
 import java.util.logging.Logger;
 
-
 public class SiteIndexer extends RecursiveAction {
 
     @Getter
@@ -72,12 +71,33 @@ public class SiteIndexer extends RecursiveAction {
         siteRepository.save(site);
     }
 
+    private String getBaseUrl() {
+        String url = site.getUrl();
+        return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
+    }
+
+    private String normalizePath(String path) {
+        path = path.replaceAll("/+", "/");
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        return path;
+    }
+
     private Document getHtml(String url) {
         Document htmlDoc = null;
         String errMessage = "";
         page = new Page();
 
-        page.setPath(url.replaceAll("http(s)?://(www\\.)?[^/]*/?", "/"));
+        String baseUrl = getBaseUrl();
+        String path = url.replaceFirst(baseUrl, "");
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        path = normalizePath(path);
+        page.setPath(path);
+
         page.setSite(site);
         synchronized (pages) {
             if (!pages.add(page)) {
@@ -102,12 +122,11 @@ public class SiteIndexer extends RecursiveAction {
         } catch (HttpStatusException e) {
             errMessage = url + e.getMessage();
             page.setCode(e.getStatusCode());
-        } catch (
-                UnknownHostException e) {
+        } catch (UnknownHostException e) {
             errMessage = url + " - не удается получить доступ к сайту";
         } catch (IOException e) {
             errMessage = url + e.getMessage();
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             errMessage = url + " - прерывание пользователя";
         }
 
@@ -214,7 +233,6 @@ public class SiteIndexer extends RecursiveAction {
                 saveSite();
                 logger.info(site.getUrl() + " - завершение обработки " + site.getStatus());
             } else {
-                //logger.info(pageUrl+ " - пропуск");
                 processPage(pageUrl);
             }
         } catch (InterruptedException | CancellationException e) {

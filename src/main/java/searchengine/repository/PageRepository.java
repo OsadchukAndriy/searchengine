@@ -15,4 +15,5 @@ public interface PageRepository extends JpaRepository<Page, Integer> {
     @Modifying
     @Query(value = "delete from page where site_id=:siteId", nativeQuery = true)
     void deletePagesBySiteId(@Param("siteId") Integer siteId);
+
 }
