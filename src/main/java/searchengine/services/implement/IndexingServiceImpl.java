@@ -103,20 +103,19 @@ public class IndexingServiceImpl implements IndexingService {
         if (pool.getActiveThreadCount() > 0) {
             return new Error("Индексация уже запущена");
         } else {
-            if (sites.getSites().stream().noneMatch(s -> s.getUrl().equals(url))) {
+            if (sites.getSites().stream().noneMatch(s -> url.startsWith(s.getUrl()))) {
                 return new Error("Данная страница находится за пределами сайтов, " +
                         "указанных в конфигурационном файле");
             }
             sites.getSites()
                     .stream()
-                    .filter(s -> s.getUrl().equals(url))
+                    .filter(s -> url.startsWith(s.getUrl()))
                     .forEach(s -> {
-                        pool.execute(InitSiteIndexator(s.getName(), s.getUrl()));
+                        pool.execute(InitSiteIndexator(s.getName(), url));
                     });
             return new CustomResponse();
         }
     }
-
 
     @Override
     public CustomResponse startIndexing() {
