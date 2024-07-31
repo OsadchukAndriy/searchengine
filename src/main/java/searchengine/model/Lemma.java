@@ -3,6 +3,7 @@ package searchengine.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
 import java.util.List;
 
 @Data
@@ -37,7 +38,7 @@ public class Lemma {
                 '}';
     }
 
-    public void increaseFrequency(){
+    public void increaseFrequency() {
         frequency++;
     }
 

@@ -34,7 +34,7 @@ public class SearchingServiceImpl implements SearchingService {
     private final IndexRepository indexRepository;
     private final SitesList sites;
     private Set<String> queryLemmas;
-    LemmaFinder lemmaFinder;
+    private LemmaFinder lemmaFinder;
 
     private final int MAX_SNIPPED_LEN = 30;
 
@@ -162,6 +162,7 @@ public class SearchingServiceImpl implements SearchingService {
         searchingResponse.setCount(totalResults);
         return searchingResponse;
     }
+
     @Override
     public CustomResponse search(String query, String url, int offset, int limit) {
         logger.info("Запрос: " + query + " сайт: " + url + " сдвиг: " + offset + " лимит: " + limit);

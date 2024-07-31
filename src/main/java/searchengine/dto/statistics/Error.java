@@ -7,7 +7,8 @@ import lombok.Setter;
 @Setter
 public class Error extends CustomResponse {
     String error;
-    public Error(String error){
+
+    public Error(String error) {
         this.setResult(false);
         this.error = error;
     }

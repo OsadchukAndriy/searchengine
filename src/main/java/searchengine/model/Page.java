@@ -2,6 +2,7 @@ package searchengine.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.List;
 
 @Entity
@@ -14,7 +15,7 @@ public class Page {
     private int id;
 
     @ManyToOne
-    @JoinColumn(name="site_id")
+    @JoinColumn(name = "site_id")
     private Site site;
 
     @Column(columnDefinition = "TEXT")
@@ -27,7 +28,7 @@ public class Page {
     @Column(columnDefinition = "MEDIUMTEXT")
     String content;
 
-    @OneToMany(mappedBy = "page",  targetEntity = Index.class)
+    @OneToMany(mappedBy = "page", targetEntity = Index.class)
     private List<Page> indexes;
 
     @Override

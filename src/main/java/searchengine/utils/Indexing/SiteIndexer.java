@@ -23,6 +23,8 @@ import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.RecursiveAction;
 import java.util.logging.Logger;
 
@@ -42,15 +44,15 @@ public class SiteIndexer extends RecursiveAction {
 
     @Getter
     @Setter
-    private Set<Page> pages;
+    private Set<Page> pages = new ConcurrentSkipListSet<>();
 
     @Getter
     @Setter
-    private HashMap<String, Lemma> lemmas;
+    private Map<String, Lemma> lemmas = new ConcurrentHashMap<>();
 
     @Getter
     @Setter
-    private Set<Index> indexes;
+    private Set<Index> indexes = new ConcurrentSkipListSet<>();
 
     @Setter
     private SiteRepository siteRepository;
@@ -64,7 +66,7 @@ public class SiteIndexer extends RecursiveAction {
     @Setter
     private IndexRepository indexRepository;
 
-    private Logger logger = Logger.getLogger(SiteIndexer.class.getName());
+    private final Logger logger = Logger.getLogger(SiteIndexer.class.getName());
 
     private void saveSite() {
         site.setStatusTime(LocalDateTime.now());

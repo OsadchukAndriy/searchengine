@@ -26,7 +26,6 @@ public class ApiController {
     Logger logger = Logger.getLogger(ApiController.class.getName());
 
 
-
     @GetMapping("/statistics")
     public ResponseEntity<StatisticsResponse> statistics() {
         logger.info("statistics - работает");
@@ -34,28 +33,28 @@ public class ApiController {
     }
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<CustomResponse> startIndexing(){
+    public ResponseEntity<CustomResponse> startIndexing() {
         logger.info("startIndexing - работает");
-         return ResponseEntity.ok(indexingService.startIndexing());
+        return ResponseEntity.ok(indexingService.startIndexing());
     }
 
     @GetMapping("/stopIndexing")
-    public ResponseEntity<CustomResponse> stopIndexing(){
+    public ResponseEntity<CustomResponse> stopIndexing() {
         logger.info("stopIndexing - работает");
         return ResponseEntity.ok(indexingService.stopIndexing());
     }
 
     @PostMapping("/indexPage")
-    public ResponseEntity<CustomResponse> startIndexingPage(Site site){
+    public ResponseEntity<CustomResponse> startIndexingPage(Site site) {
         logger.info("indexPage - работает");
         return ResponseEntity.ok(indexingService.indexPage(site.getUrl()));
     }
 
     @GetMapping("/search")
     public ResponseEntity<CustomResponse> startSearching(@RequestParam String query,
-                                                   @RequestParam(required = false) String site,
-                                                   @RequestParam int offset,
-                                                   @RequestParam int limit) {
+                                                         @RequestParam(required = false) String site,
+                                                         @RequestParam int offset,
+                                                         @RequestParam int limit) {
         logger.info("search - работает");
         return ResponseEntity.ok(searchingService.search(query, site, offset, limit));
     }
