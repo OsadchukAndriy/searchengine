@@ -19,11 +19,9 @@ spring:
 #    open-in-view: false
 indexing-settings:
   sites:
-#    - url: https://www.lenta.ru
-#      name: Лента.ру
-#    - url: https://www.skillbox.ru
-#      name: Skillbox
     -  url: https://et-cetera.ru/mobile/
        name: et-cetera
     - url: https://sendel.ru/
       name: sendel
+    - url: https://www.playback.ru/
+      name: playback

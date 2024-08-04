@@ -53,36 +53,51 @@ public class SearchingServiceImpl implements SearchingService {
     private String MakeSnipped(String htmlText) {
         String pageText = Jsoup.parse(htmlText).text();
         pageText = Jsoup.clean(pageText, Safelist.none());
-        String result = "";
 
+        List<String> snippets = new ArrayList<>();
         String REGEX = "[а-яА-Я]+";
         Pattern pattern = Pattern.compile(REGEX);
         Matcher matcher = pattern.matcher(pageText);
-        int curIndex = 0;
-        boolean first = true;
+
+        Map<Integer, String> lemmaPositions = new TreeMap<>();
         while (matcher.find()) {
             String word = matcher.group();
             String lemma = lemmaFinder.getLemmaSet(word).stream().reduce("", String::concat);
-            if (result.concat(word).length() > MAX_SNIPPED_LEN) {
+            if (queryLemmas.contains(lemma)) {
+                lemmaPositions.put(matcher.start(), word);
+            }
+        }
+
+        if (lemmaPositions.isEmpty()) {
+            return "";
+        }
+
+        Set<String> foundLemmas = new HashSet<>();
+
+        for (Map.Entry<Integer, String> entry : lemmaPositions.entrySet()) {
+            int wordStart = entry.getKey();
+            String word = entry.getValue();
+            String lemma = lemmaFinder.getLemmaSet(word).stream().reduce("", String::concat);
+
+            if (foundLemmas.contains(lemma)) {
+                continue;
+            }
+
+            int start = Math.max(0, wordStart - MAX_SNIPPED_LEN / 2);
+            int end = Math.min(pageText.length(), wordStart + word.length() + MAX_SNIPPED_LEN / 2);
+
+            String snippet = pageText.substring(start, end);
+            snippet = snippet.replace(word, "<b>" + word + "</b>");
+
+            snippets.add(snippet);
+            foundLemmas.add(lemma);
+
+            if (foundLemmas.size() >= queryLemmas.size()) {
                 break;
             }
-            if (queryLemmas.stream().anyMatch(q -> q.equals(lemma))) {
-                if (first) {
-                    first = false;
-                    curIndex = matcher.start();
-                }
-                result = result.concat(pageText.substring(curIndex, matcher.start()))
-                        .concat("<b>").concat(word).concat("</b>");
-            } else {
-                if (!first) {
-                    result = result.concat(pageText.substring(curIndex, matcher.end()));
-                }
-            }
-            curIndex = matcher.end();
         }
-        return result;
+        return String.join(" ... ", snippets);
     }
-
 
     private List<SearchingData> lemmaProcessing(List<Lemma> lemmas) {
         List<SearchingData> searchingDataList = new ArrayList<>();
